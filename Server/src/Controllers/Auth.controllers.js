@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs"
 import jwt from "jsonwebtoken"
 import { User } from "../Models/User.Models.js"
+import transporter from "../Config/Nodemailer.config.js"
 
 
 //Register
@@ -41,6 +42,20 @@ const Register = async(req, res) => {
             maxAge: 7 * 24 * 60 * 60 * 1000 
         })
 
+        //Sending welcome mail
+        const mailOptions = {
+            from: `"MERN-Auth" <${process.env.SENDER_MAIL}>`,
+            to: user.email,
+            subject: 'Welcome to MERN-Auth',
+            text: `Welcome to Mern-Auth Authentication. Your account has been created with email id: ${email}`
+        }
+
+        try {
+            await transporter.sendMail(mailOptions);
+        } catch (mailErr) {
+            console.error("Email failed:", mailErr.message);
+        }
+
         return res
         .status(201)
         .json({
@@ -51,7 +66,8 @@ const Register = async(req, res) => {
                 email: user.email,
             },
             message: "User Registered Successfully" 
-        })
+        });
+
         
     } catch (error) {
         return res
