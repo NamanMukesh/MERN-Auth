@@ -155,8 +155,55 @@ const logout = async(req, res) => {
     }
 }
 
+//Otp Verification Mail
+const sendVerifyOtp = async(req, res) => {
+    try {
+        const userId = req.body;
+
+        if(!userId) {
+            return res
+            .status(400)
+            .json({success: false, message: "User ID is required"})
+        }
+
+        const user = await User.findById(userId);
+
+        if(user.isAccountVerified) {
+            return res
+            .status(404)
+            .json(404).json({success: false, message: "Account already verified"})
+        }
+
+        const Otp = String(Math.floor(100000 + Math.random() * 900000));
+
+        user.verifyOTP(Otp);
+        user.verifyOTPExpireAt = Date.now() + 24 * 60 * 60 * 1000;
+
+        await user.save();
+
+        const mailOptions = {
+            from: `"MERN-Auth" <${process.env.SENDER_MAIL}>`,
+            to: user.email,
+            subject: 'Account Verification OTP',
+            text: `Your OTP for account verification is ${Otp}. It is valid for 24 hours.`
+        }
+
+        await transporter.sendMail(mailOptions);
+
+        res
+        .status(200)
+        .json({success: true, message: "OTP sent to your email for verification"})
+
+    } catch (error) {
+        res.json({success: false, message: error.message})
+    }
+}
+
+
+
 export {
     Register,
     Login,
-    logout
+    logout,
+    sendVerifyOtp
 }
