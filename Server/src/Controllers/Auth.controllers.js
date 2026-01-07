@@ -199,6 +199,54 @@ const sendVerifyOtp = async(req, res) => {
     }
 }
 
+//Email Verification
+const verifyEmail = async(req, res) => {
+    const {userId, Otp} = req.body
+
+    if(!userId || !Otp){
+        return res
+        .status(400)
+        .json({success: false, message: "Missing Details"})
+    }
+    
+    try {
+
+        const user = await User.findById(userId);
+        
+        if(!user){
+            return res
+            .status(400)
+            .json({success: false, message: "User not found"})
+        }
+
+        if(user.verifyOTP !== Otp || user.verifyOTP === ""){
+            return res
+            .status(400)
+            .json({success: false, message: "Invalid OTP"})
+        }
+
+        if(user.verifyOTPExpireAt < Date.now()){
+            return res
+            .status(400)
+            .json({success: false, message: "OTP Expired"})
+        }
+
+        user.isAccountVerified = true;
+        user.verifyOTP = "";
+        user.verifyOTPExpireAt = 0;
+
+        await user.save();
+
+        return res
+        .status(200)
+        .json({success: true, message: "Email Verified Successfully"})
+
+    } catch (error) {
+        return res
+        .status(500)
+        .json({success: false, message: error.message})
+    }
+} 
 
 
 export {
