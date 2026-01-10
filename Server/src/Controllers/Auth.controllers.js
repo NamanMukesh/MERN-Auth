@@ -246,12 +246,12 @@ const verifyEmail = async(req, res) => {
         .status(500)
         .json({success: false, message: error.message})
     }
-} 
-
+}
 
 export {
     Register,
     Login,
     logout,
-    sendVerifyOtp
+    sendVerifyOtp,
+    verifyEmail
 }
